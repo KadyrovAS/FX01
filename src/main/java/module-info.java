@@ -7,11 +7,13 @@ module com.myapp.dashboard {
     opens org.controller to javafx.fxml;
     opens org.model to javafx.base;
     opens org.service to javafx.base;
+    opens org.components to javafx.base;
     opens org to javafx.graphics;
 
-    // Экспортируем пакеты для внешнего мира
+    // Экспортируем пакеты
     exports org;
     exports org.controller;
     exports org.model;
     exports org.service;
+    exports org.components;
 }
