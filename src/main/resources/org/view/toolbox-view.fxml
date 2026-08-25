@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.controller.ToolboxController"
+      spacing="10" style="-fx-padding: 10; -fx-background-color: #e8e8e8;">
+
+    <Label text="🛠 Панель инструментов" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
+
+    <Separator />
+
+    <Button text="Кнопка (Button)" onAction="#addButton" maxWidth="Infinity" />
+    <Button text="Надпись (Label)" onAction="#addLabel" maxWidth="Infinity" />
+    <Button text="Поле ввода (TextField)" onAction="#addTextField" maxWidth="Infinity" />
+    <Button text="График (LineChart)" onAction="#addChart" maxWidth="Infinity" />
+
+    <Separator />
+
+    <Button text="🗑 Очистить холст" onAction="#clearCanvas" maxWidth="Infinity" style="-fx-background-color: #ff6b6b; -fx-text-fill: white;" />
+</VBox>

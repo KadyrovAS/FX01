@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.controller.MainController">
+    <!-- Верхняя панель с кнопкой -->
+    <top>
+        <HBox spacing="10" style="-fx-padding: 10;">
+            <Label text="Добро пожаловать, сеньор!" />
+            <Button text="Сгенерировать данные" fx:id="generateButton"/>
+        </HBox>
+    </top>
+
+    <!-- Центр с графиком -->
+    <center>
+        <StackPane style="-fx-padding: 10;">
+            <children>
+                <LineChart title="Мой первый график" fx:id="lineChart">
+                    <xAxis>
+                        <NumberAxis label="Время" />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis label="Значение" />
+                    </yAxis>
+                </LineChart>
+            </children>
+        </StackPane>
+    </center>
+</BorderPane>
