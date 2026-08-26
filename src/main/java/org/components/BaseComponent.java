@@ -72,7 +72,7 @@ public abstract class BaseComponent extends StackPane {
         refresh();
     }
 
-    public boolean isResizable() { return resizable; }
+    public boolean isResizable() { return this.resizable; }
     public void setResizable(boolean resizable) { this.resizable = resizable; }
 
     public boolean isDraggable() { return draggable; }
