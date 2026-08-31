@@ -18,15 +18,24 @@ public class ChartComponent extends BaseComponent {
     @Override
     protected void buildUI() {
         getChildren().clear();
+
         NumberAxis xAxis = new NumberAxis();
         xAxis.setLabel("X");
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Y");
+
         chart = new LineChart<>(xAxis, yAxis);
         chart.setTitle(getText());
         chart.setPrefWidth(getPrefWidth());
         chart.setPrefHeight(getPrefHeight());
+
         getChildren().add(chart);
+
+        makeChildrenTransparentForMouse();
+
+        if (resizeHandle != null) {
+            resizeHandle.toFront();
+        }
     }
 
     @Override
@@ -35,6 +44,7 @@ public class ChartComponent extends BaseComponent {
         xAxis.setLabel("X");
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Y");
+
         LineChart<Number, Number> runtimeChart = new LineChart<>(xAxis, yAxis);
         runtimeChart.setTitle(getText());
         return runtimeChart;

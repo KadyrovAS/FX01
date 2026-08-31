@@ -16,6 +16,7 @@ public class ButtonComponent extends BaseComponent {
     @Override
     protected void buildUI() {
         getChildren().clear();
+
         button = new Button(getText());
         button.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-text-fill: %s; -fx-background-color: %s;",
@@ -23,7 +24,17 @@ public class ButtonComponent extends BaseComponent {
         ));
         button.setPrefWidth(getPrefWidth());
         button.setPrefHeight(getPrefHeight());
+
         getChildren().add(button);
+
+        makeChildrenTransparentForMouse();
+
+        // ============================================================
+        // 🔥 ВАЖНО: хэндл всегда должен быть на переднем плане
+        // ============================================================
+        if (resizeHandle != null) {
+            resizeHandle.toFront();
+        }
     }
 
     @Override

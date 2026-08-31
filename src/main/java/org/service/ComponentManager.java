@@ -1,22 +1,24 @@
 package org.service;
 
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.Pane;
 import org.components.BaseComponent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-/**
- * Управляет компонентами на холсте: добавление, удаление, выделение, перемещение.
- */
 public class ComponentManager {
 
     private final Pane canvas;
     private final List<BaseComponent> components = new ArrayList<>();
     private BaseComponent selectedComponent;
 
-    // Смещение для перетаскивания
+    private Consumer<BaseComponent> onComponentSelected;
+    private Consumer<BaseComponent> onComponentDoubleClick;
+    private Runnable onComponentChanged;
+
     private double dragOffsetX;
     private double dragOffsetY;
 
@@ -24,14 +26,41 @@ public class ComponentManager {
         this.canvas = canvas;
     }
 
+    public void setOnComponentSelected(Consumer<BaseComponent> callback) {
+        this.onComponentSelected = callback;
+    }
+
+    public void setOnComponentDoubleClick(Consumer<BaseComponent> callback) {
+        this.onComponentDoubleClick = callback;
+    }
+
+    public void setOnComponentChanged(Runnable callback) {
+        this.onComponentChanged = callback;
+    }
+
+    private void notifySelectionChanged() {
+        if (onComponentSelected != null) {
+            onComponentSelected.accept(selectedComponent);
+        }
+    }
+
+    private void notifyDoubleClick(BaseComponent component) {
+        if (onComponentDoubleClick != null) {
+            onComponentDoubleClick.accept(component);
+        }
+    }
+
+    private void notifyComponentChanged() {
+        if (onComponentChanged != null) {
+            onComponentChanged.run();
+        }
+    }
+
     public void addComponent(BaseComponent component) {
         components.add(component);
         canvas.getChildren().add(component);
-
-        // Делаем компонент интерактивным
         setupComponentInteraction(component);
-
-        System.out.println("✅ Добавлен компонент: " + component.getComponentName());
+        System.out.println("✅ Добавлен: " + component);
     }
 
     public void removeComponent(BaseComponent component) {
@@ -39,14 +68,109 @@ public class ComponentManager {
         canvas.getChildren().remove(component);
         if (selectedComponent == component) {
             selectedComponent = null;
+            notifySelectionChanged();
         }
-        System.out.println("🗑 Удален компонент: " + component.getComponentName());
+        System.out.println("🗑 Удален: " + component);
     }
 
     public void clear() {
         components.clear();
         canvas.getChildren().clear();
         selectedComponent = null;
+        notifySelectionChanged();
+    }
+
+    public void selectComponent(BaseComponent component) {
+        components.forEach(c -> {
+            c.setStyle("");
+            c.hideResizeHandle();
+        });
+
+        if (component != null) {
+            this.selectedComponent = component;
+            component.setStyle(
+                    "-fx-border-color: #3498db; " +
+                            "-fx-border-width: 2px; " +
+                            "-fx-border-style: solid;"
+            );
+            component.showResizeHandle();  // ← показываем хэндл
+            System.out.println("🔍 Выбран: " + component);
+        } else {
+            this.selectedComponent = null;
+            System.out.println("🔍 Выделение сброшено");
+        }
+
+        notifySelectionChanged();
+    }
+
+    private void setupComponentInteraction(BaseComponent component) {
+        component.setOnMouseClicked(e -> {
+            selectComponent(component);
+            e.consume();
+        });
+
+        component.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                selectComponent(component);
+                notifyDoubleClick(component);
+                e.consume();
+            }
+        });
+
+        component.setOnMousePressed(e -> {
+            if (component.isDraggable()) {
+                dragOffsetX = e.getSceneX() - component.getLayoutX();
+                dragOffsetY = e.getSceneY() - component.getLayoutY();
+                selectComponent(component);
+                component.toFront();
+            }
+        });
+
+        component.setOnMouseDragged(e -> {
+            if (component.isDraggable()) {
+                double newX = e.getSceneX() - dragOffsetX;
+                double newY = e.getSceneY() - dragOffsetY;
+                component.setLayoutX(newX);
+                component.setLayoutY(newY);
+                notifyComponentChanged();
+            }
+        });
+
+        component.setOnMouseReleased(e -> {
+            if (component.isDraggable()) {
+                double x = component.getLayoutX();
+                double y = component.getLayoutY();
+
+                boolean isOutside =
+                        x + component.getPrefWidth() < 0 ||
+                                x > canvas.getWidth() ||
+                                y + component.getPrefHeight() < 0 ||
+                                y > canvas.getHeight();
+
+                if (isOutside) {
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+                    confirm.setTitle("Удаление компонента");
+                    confirm.setHeaderText("Удалить компонент?");
+                    confirm.setContentText("Вы перетащили компонент за пределы холста. Удалить его?");
+
+                    if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                        removeComponent(component);
+                    } else {
+                        double newX = Math.max(0, Math.min(x, canvas.getWidth() - component.getPrefWidth()));
+                        double newY = Math.max(0, Math.min(y, canvas.getHeight() - component.getPrefHeight()));
+                        component.setLayoutX(newX);
+                        component.setLayoutY(newY);
+                        notifyComponentChanged();
+                    }
+                } else {
+                    double clampedX = Math.max(0, Math.min(x, canvas.getWidth() - component.getPrefWidth()));
+                    double clampedY = Math.max(0, Math.min(y, canvas.getHeight() - component.getPrefHeight()));
+                    component.setLayoutX(clampedX);
+                    component.setLayoutY(clampedY);
+                    notifyComponentChanged();
+                }
+            }
+        });
     }
 
     public List<BaseComponent> getComponents() {
@@ -55,71 +179,5 @@ public class ComponentManager {
 
     public BaseComponent getSelectedComponent() {
         return selectedComponent;
-    }
-
-    public void selectComponent(BaseComponent component) {
-        // Снимаем выделение со всех
-        components.forEach(c -> c.setStyle(""));
-
-        if (component != null) {
-            this.selectedComponent = component;
-            // Выделяем компонент (синяя рамка)
-            component.setStyle("-fx-border-color: #3498db; -fx-border-width: 2px; -fx-border-style: solid;");
-            System.out.println("🔍 Выбран: " + component);
-        } else {
-            this.selectedComponent = null;
-        }
-    }
-
-    private void setupComponentInteraction(BaseComponent component) {
-        // Клик для выделения
-        component.setOnMouseClicked(e -> {
-            selectComponent(component);
-            e.consume();
-        });
-
-        // Перетаскивание
-        component.setOnMousePressed(e -> {
-            if (component.isDraggable()) {
-                dragOffsetX = e.getSceneX() - component.getLayoutX();
-                dragOffsetY = e.getSceneY() - component.getLayoutY();
-                selectComponent(component);
-                component.toFront(); // Поднимаем на передний план
-            }
-        });
-
-        component.setOnMouseDragged(e -> {
-            if (component.isDraggable()) {
-                double newX = e.getSceneX() - dragOffsetX;
-                double newY = e.getSceneY() - dragOffsetY;
-
-                // Ограничиваем перемещение в пределах холста
-                newX = Math.max(0, Math.min(newX, canvas.getWidth() - component.getPrefWidth()));
-                newY = Math.max(0, Math.min(newY, canvas.getHeight() - component.getPrefHeight()));
-
-                component.setLayoutX(newX);
-                component.setLayoutY(newY);
-            }
-        });
-
-        // Двойной клик для редактирования текста
-        component.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2) {
-                editComponentText(component);
-            }
-        });
-    }
-
-    private void editComponentText(BaseComponent component) {
-        // Простой вариант - показываем диалог
-        javafx.scene.control.TextInputDialog dialog = new javafx.scene.control.TextInputDialog(component.getText());
-        dialog.setTitle("Редактирование");
-        dialog.setHeaderText("Измените текст компонента");
-        dialog.setContentText("Текст:");
-
-        dialog.showAndWait().ifPresent(newText -> {
-            component.setText(newText);
-            System.out.println("✏️ Текст изменен на: " + newText);
-        });
     }
 }

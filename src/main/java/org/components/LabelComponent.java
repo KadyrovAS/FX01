@@ -16,6 +16,7 @@ public class LabelComponent extends BaseComponent {
     @Override
     protected void buildUI() {
         getChildren().clear();
+
         label = new Label(getText());
         label.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-text-fill: %s; -fx-background-color: %s; -fx-padding: 5px;",
@@ -23,7 +24,14 @@ public class LabelComponent extends BaseComponent {
         ));
         label.setPrefWidth(getPrefWidth());
         label.setPrefHeight(getPrefHeight());
+
         getChildren().add(label);
+
+        makeChildrenTransparentForMouse();
+
+        if (resizeHandle != null) {
+            resizeHandle.toFront();
+        }
     }
 
     @Override
