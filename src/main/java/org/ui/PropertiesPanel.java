@@ -7,13 +7,43 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import org.components.BaseComponent;
 
+/**
+ * Панель свойств для редактирования параметров выбранного компонента.
+ * <p>
+ * Отображает все доступные свойства компонента:
+ * <ul>
+ *   <li><b>Текст</b> — {@link TextField}</li>
+ *   <li><b>Размер шрифта</b> — {@link Spinner}&lt;Double&gt;</li>
+ *   <li><b>Цвет текста</b> — {@link ColorPicker}</li>
+ *   <li><b>Цвет фона</b> — {@link ColorPicker}</li>
+ *   <li><b>Ширина</b> — {@link Spinner}&lt;Double&gt;</li>
+ *   <li><b>Высота</b> — {@link Spinner}&lt;Double&gt;</li>
+ *   <li><b>X позиция</b> — {@link Spinner}&lt;Double&gt;</li>
+ *   <li><b>Y позиция</b> — {@link Spinner}&lt;Double&gt;</li>
+ *   <li><b>Перетаскивание</b> — {@link CheckBox}</li>
+ *   <li><b>Изменение размера</b> — {@link CheckBox}</li>
+ * </ul>
+ * </p>
+ *
+ * <p>Дополнительно отображает ID и тип компонента (только для информации).</p>
+ *
+ * @see org.components.BaseComponent
+ * @see org.service.ComponentManager
+ */
 public class PropertiesPanel extends VBox {
 
+    // ================================================================
+    // ПОЛЯ
+    // ================================================================
+
+    /** Текущий редактируемый компонент */
     private BaseComponent currentComponent;
 
+    // Информационные поля
     private Label idLabel;
     private Label typeLabel;
 
+    // Редактируемые поля
     private TextField textField;
     private Spinner<Double> fontSizeSpinner;
     private ColorPicker textColorPicker;
@@ -25,17 +55,29 @@ public class PropertiesPanel extends VBox {
     private CheckBox draggableCheckBox;
     private CheckBox resizableCheckBox;
 
+    // Контейнеры
     private GridPane infoGrid;
     private GridPane formGrid;
     private Label placeholderLabel;
 
+    /** Флаг для предотвращения рекурсивных обновлений */
     private boolean updating = false;
 
+    // ================================================================
+    // КОНСТРУКТОР
+    // ================================================================
+
+    /**
+     * Создаёт панель свойств.
+     * Изначально показывает заглушку "Выберите компонент на холсте".
+     */
     public PropertiesPanel() {
         setPadding(new Insets(10));
         setSpacing(10);
         setStyle("-fx-background-color: #f8f9fa;");
         setPrefWidth(300);
+
+        System.out.println("📐 PropertiesPanel создан");
 
         Label title = new Label("📐 Свойства");
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -51,6 +93,15 @@ public class PropertiesPanel extends VBox {
         showPlaceholder();
     }
 
+    // ================================================================
+    // СОЗДАНИЕ UI
+    // ================================================================
+
+    /**
+     * Создаёт информационную секцию с ID и типом компонента.
+     *
+     * @return {@link GridPane} с информацией
+     */
     private GridPane createInfoSection() {
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -81,6 +132,11 @@ public class PropertiesPanel extends VBox {
         return grid;
     }
 
+    /**
+     * Создаёт форму для редактирования свойств компонента.
+     *
+     * @return {@link GridPane} с элементами управления
+     */
     private GridPane createPropertyForm() {
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -100,10 +156,8 @@ public class PropertiesPanel extends VBox {
         textField = new TextField();
         textField.setPromptText("Введите текст");
 
-        // ============================================================
-        // 🔥 СИНХРОНИЗАЦИЯ ТЕКСТА: при вводе текста обновляем компонент
-        // ============================================================
         textField.textProperty().addListener((obs, oldVal, newVal) -> {
+            System.out.println("✏️ textField изменен: \"" + newVal + "\"");
             if (!updating && currentComponent != null) {
                 updateProperty("text", newVal);
             }
@@ -249,11 +303,6 @@ public class PropertiesPanel extends VBox {
                 boolean enabled = resizableCheckBox.isSelected();
                 widthSpinner.setDisable(!enabled);
                 heightSpinner.setDisable(!enabled);
-                if (enabled) {
-                    currentComponent.showResizeHandle();
-                } else {
-                    currentComponent.hideResizeHandle();
-                }
             }
         });
         grid.add(resizableCheckBox, 0, row, 2, 1);
@@ -262,8 +311,20 @@ public class PropertiesPanel extends VBox {
         return grid;
     }
 
+    // ================================================================
+    // ОБНОВЛЕНИЕ СВОЙСТВА
+    // ================================================================
+
+    /**
+     * Обновляет свойство компонента.
+     *
+     * @param property название свойства ("text", "fontSize", "width" и т.д.)
+     * @param value    новое значение
+     */
     private void updateProperty(String property, Object value) {
         if (updating || currentComponent == null) return;
+
+        System.out.println("🔄 updateProperty: " + property + " = " + value);
 
         try {
             switch (property) {
@@ -313,21 +374,37 @@ public class PropertiesPanel extends VBox {
         }
     }
 
+    // ================================================================
+    // ЗАПОЛНЕНИЕ ПАНЕЛИ СВОЙСТВ
+    // ================================================================
+
+    /**
+     * Показывает свойства указанного компонента.
+     *
+     * @param component компонент, чьи свойства нужно отобразить,
+     *                  или {@code null} для отображения заглушки
+     */
     public void showProperties(BaseComponent component) {
+        System.out.println("📐 showProperties вызван с: " + component);
         this.currentComponent = component;
         updating = true;
 
         try {
             if (component == null) {
+                System.out.println("📐 showProperties: component == null, показываем заглушку");
                 showPlaceholder();
                 return;
             }
 
+            System.out.println("📐 showProperties: отображаем свойства для " + component.getComponentType());
+
+            // Удаляем заглушку
             if (placeholderLabel != null) {
                 getChildren().remove(placeholderLabel);
                 placeholderLabel = null;
             }
 
+            // Показываем форму
             if (!getChildren().contains(infoGrid)) {
                 getChildren().add(2, infoGrid);
             }
@@ -341,6 +418,7 @@ public class PropertiesPanel extends VBox {
 
             setTitle("📐 " + component.getComponentType());
 
+            // Заполняем данными
             idLabel.setText(component.getComponentId().substring(0, 8) + "...");
             typeLabel.setText(component.getComponentType());
 
@@ -360,13 +438,20 @@ public class PropertiesPanel extends VBox {
             widthSpinner.setDisable(!enabled);
             heightSpinner.setDisable(!enabled);
 
+            System.out.println("📐 showProperties: свойства отображены успешно");
+
         } finally {
             updating = false;
         }
     }
 
+    /**
+     * Обновляет значения в панели свойств без перестроения формы.
+     * Используется при изменении размера/позиции мышкой.
+     */
     public void refreshValues() {
         if (currentComponent == null) return;
+        System.out.println("🔄 refreshValues() вызван");
         updating = true;
         try {
             widthSpinner.getValueFactory().setValue(currentComponent.getPrefWidth());
@@ -378,6 +463,9 @@ public class PropertiesPanel extends VBox {
         }
     }
 
+    /**
+     * Устанавливает фокус на поле "Текст" для быстрого редактирования.
+     */
     public void focusTextField() {
         if (currentComponent != null) {
             textField.requestFocus();
@@ -385,6 +473,13 @@ public class PropertiesPanel extends VBox {
         }
     }
 
+    // ================================================================
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+    // ================================================================
+
+    /**
+     * Показывает заглушку "Выберите компонент на холсте".
+     */
     private void showPlaceholder() {
         setTitle("📐 Свойства");
 
@@ -405,6 +500,11 @@ public class PropertiesPanel extends VBox {
         getChildren().add(placeholderLabel);
     }
 
+    /**
+     * Устанавливает заголовок панели.
+     *
+     * @param title новый заголовок
+     */
     private void setTitle(String title) {
         if (!getChildren().isEmpty()) {
             Label titleLabel = (Label) getChildren().get(0);
@@ -412,6 +512,12 @@ public class PropertiesPanel extends VBox {
         }
     }
 
+    /**
+     * Преобразует {@link Color} в HEX-строку (#RRGGBB).
+     *
+     * @param color цвет для преобразования
+     * @return строка в формате "#RRGGBB"
+     */
     private String toHex(Color color) {
         if (color == null) return "#000000";
         return String.format("#%02X%02X%02X",

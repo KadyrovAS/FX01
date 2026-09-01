@@ -14,17 +14,55 @@ import org.components.ComponentFactory;
 import org.service.ComponentManager;
 import org.ui.PropertiesPanel;
 
+/**
+ * Главный класс приложения — визуальный конструктор.
+ * <p>
+ * Отвечает за создание главного окна, компоновку интерфейса,
+ * инициализацию менеджера компонентов и обработку действий пользователя.
+ * </p>
+ *
+ * <p>Интерфейс состоит из трёх панелей:</p>
+ * <ul>
+ *   <li><b>Палитра</b> (слева) — список доступных компонентов для перетаскивания</li>
+ *   <li><b>Холст</b> (центр) — рабочая область для размещения компонентов</li>
+ *   <li><b>Свойства</b> (справа) — панель для редактирования свойств выбранного компонента</li>
+ * </ul>
+ *
+ * @author Your Name
+ * @version 1.0
+ * @since 2026
+ */
 public class DesignerApp extends Application {
 
+    /** Менеджер компонентов, управляющий всеми компонентами на холсте */
     private ComponentManager componentManager;
+
+    /** Панель свойств для редактирования параметров выбранного компонента */
     private PropertiesPanel propertiesPanel;
 
+    /**
+     * Точка входа в приложение.
+     *
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    /**
+     * Создаёт и настраивает главное окно приложения.
+     * <p>
+     * Метод вызывается JavaFX после запуска приложения.
+     * Создаёт холст, палитру, панель свойств, меню и объединяет их в единое окно.
+     * </p>
+     *
+     * @param primaryStage главное окно приложения
+     */
     @Override
     public void start(Stage primaryStage) {
+        System.out.println("🚀 DesignerApp.start() вызван");
+
+        // Создание холста
         Pane canvas = new Pane();
         canvas.setStyle(
                 "-fx-background-color: #f8f9fa; " +
@@ -33,29 +71,36 @@ public class DesignerApp extends Application {
         );
         canvas.setPrefSize(800, 600);
 
+        // Создание менеджера компонентов
         componentManager = new ComponentManager(canvas);
 
-        // ============================================================
-        // 🔥 УСТАНОВКА КОЛБЭКОВ
-        // ============================================================
+        // Установка колбэков
         componentManager.setOnComponentSelected(this::onComponentSelected);
         componentManager.setOnComponentDoubleClick(this::onComponentDoubleClick);
         componentManager.setOnComponentChanged(this::onComponentChanged);
 
+        // Настройка Drag-and-Drop для холста
         setupCanvasDragAndDrop(canvas);
 
+        // Создание палитры
         VBox palette = createPalette();
+
+        // Создание панели свойств
         propertiesPanel = new PropertiesPanel();
 
+        // Создание разделителя
         SplitPane mainSplit = new SplitPane(palette, canvas, propertiesPanel);
         mainSplit.setDividerPositions(0.15, 0.65);
 
+        // Создание меню
         MenuBar menuBar = createMenuBar();
 
+        // Корневой контейнер
         VBox root = new VBox();
         root.getChildren().addAll(menuBar, mainSplit);
         VBox.setVgrow(mainSplit, Priority.ALWAYS);
 
+        // Создание сцены и отображение окна
         Scene scene = new Scene(root, 1280, 800);
         primaryStage.setTitle("🎨 Визуальный конструктор - Studio");
         primaryStage.setScene(scene);
@@ -65,23 +110,46 @@ public class DesignerApp extends Application {
         ComponentFactory.printRegistry();
     }
 
+    /**
+     * Обработчик выделения компонента.
+     * Вызывается, когда пользователь кликает на компонент на холсте.
+     *
+     * @param component выделенный компонент, или {@code null} если выделение сброшено
+     */
     private void onComponentSelected(BaseComponent component) {
+        System.out.println("📢 onComponentSelected вызван с компонентом: " + component);
         propertiesPanel.showProperties(component);
     }
 
+    /**
+     * Обработчик двойного клика по компоненту.
+     * Устанавливает фокус в поле "Текст" панели свойств.
+     *
+     * @param component компонент, по которому был совершён двойной клик
+     */
     private void onComponentDoubleClick(BaseComponent component) {
+        System.out.println("📢 onComponentDoubleClick вызван с компонентом: " + component);
         propertiesPanel.focusTextField();
     }
 
-    // ================================================================
-    // 🔥 СИНХРОНИЗАЦИЯ ПРИ ИЗМЕНЕНИИ РАЗМЕРА/ПОЗИЦИИ
-    // ================================================================
-
+    /**
+     * Обработчик изменения компонента.
+     * Вызывается при изменении размера или позиции компонента.
+     * Обновляет значения в панели свойств.
+     */
     private void onComponentChanged() {
+        System.out.println("📢 onComponentChanged вызван");
         propertiesPanel.refreshValues();
     }
 
+    /**
+     * Настраивает холст для приёма перетаскиваемых компонентов.
+     *
+     * @param canvas холст, на который будут перетаскиваться компоненты
+     */
     private void setupCanvasDragAndDrop(Pane canvas) {
+        System.out.println("🖱️ setupCanvasDragAndDrop вызван");
+
         canvas.setOnDragOver(event -> {
             if (event.getGestureSource() != canvas && event.getDragboard().hasString()) {
                 event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
@@ -93,6 +161,7 @@ public class DesignerApp extends Application {
             Dragboard db = event.getDragboard();
             if (db.hasString()) {
                 String type = db.getString();
+                System.out.println("🖱️ Drag-and-drop: тип " + type);
                 try {
                     BaseComponent component = ComponentFactory.create(type);
 
@@ -120,7 +189,18 @@ public class DesignerApp extends Application {
         });
     }
 
+    /**
+     * Создаёт палитру компонентов.
+     * <p>
+     * Каждый элемент палитры является источником для Drag-and-Drop.
+     * При перетаскивании элемента на холст создаётся соответствующий компонент.
+     * </p>
+     *
+     * @return вертикальный контейнер с палитрой компонентов
+     */
     private VBox createPalette() {
+        System.out.println("🎨 createPalette() вызван");
+
         VBox palette = new VBox(10);
         palette.setPadding(new Insets(10));
         palette.setStyle(
@@ -183,6 +263,11 @@ public class DesignerApp extends Application {
         return palette;
     }
 
+    /**
+     * Создаёт меню приложения.
+     *
+     * @return объект {@link MenuBar} с настроенными пунктами меню
+     */
     private MenuBar createMenuBar() {
         MenuBar menuBar = new MenuBar();
 
@@ -199,6 +284,11 @@ public class DesignerApp extends Application {
         return menuBar;
     }
 
+    /**
+     * Показывает информационное сообщение в диалоговом окне.
+     *
+     * @param message текст сообщения
+     */
     private void showAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Информация");
