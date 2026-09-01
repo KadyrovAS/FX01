@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ================================================================ -->
+    <!-- ИНФОРМАЦИЯ О ПРОЕКТЕ                                              -->
+    <!-- ================================================================ -->
+
+    <groupId>com.myapp</groupId>
+    <artifactId>dashboard</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Визуальный конструктор</name>
+    <description>Приложение для визуального проектирования интерфейсов</description>
+
+    <!-- ================================================================ -->
+    <!-- СВОЙСТВА                                                         -->
+    <!-- ================================================================ -->
+
+    <properties>
+        <!-- Версия Java -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Версии зависимостей -->
+        <javafx.version>21</javafx.version>
+        <jfreechart.version>1.5.4</jfreechart.version>
+    </properties>
+
+    <!-- ================================================================ -->
+    <!-- ЗАВИСИМОСТИ                                                       -->
+    <!-- ================================================================ -->
+
+    <dependencies>
+        <!-- JavaFX Controls -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- JavaFX FXML (для разметки) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- JFreeChart (для графиков) -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>${jfreechart.version}</version>
+        </dependency>
+    </dependencies>
+
+    <!-- ================================================================ -->
+    <!-- СБОРКА                                                            -->
+    <!-- ================================================================ -->
+
+    <build>
+        <plugins>
+            <!-- JavaFX Maven Plugin для запуска -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>org.DesignerApp</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
